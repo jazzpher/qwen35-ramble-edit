@@ -1,0 +1,1 @@
+{"file": "results/astra_gsm8k.jsonl", "n": 12, "accuracy": 0.083, "hit_cap": 0.917, "kept_going": 0.5, "loop_rate": 0.083, "closed_thinking": 0.167, "mean_tokens": 5903}

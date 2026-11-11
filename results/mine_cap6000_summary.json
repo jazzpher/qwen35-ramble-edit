@@ -1,0 +1,1 @@
+{"file": "results/mine_gsm8k.jsonl", "n": 12, "accuracy": 0.25, "hit_cap": 0.833, "kept_going": 0.583, "loop_rate": 0.167, "closed_thinking": 0.167, "mean_tokens": 5141}
