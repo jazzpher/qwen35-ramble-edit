@@ -43,9 +43,46 @@ Same 12 GSM8K test problems, Qwen chat template with thinking on, temperature 0.
 - Even on a trivial question ("3 apples + 4") the edited model still second-guesses itself ("Wait, is there a trick?") for 1,500 tokens. The edit trims some loops, it does not make the model concise.
 - The 2,500-cap baseline (`results/base_cap2500_*`) was 0/8, all hitting the cap.
 
+## v2: stronger edit (alpha 8)
+
+Same direction `u`, same 64 columns, same layers 15 + 19, only alpha raised from 6 to 8 (`scripts/make_variant.py`). Same 12 test problems, same sampler, same 6,000 cap.
+
+v1's 3/12 counted one problem (idx 1257) whose `\boxed{}` sat inside thinking that never finished. `scripts/compare_v2.py` counts **completed correct** only: right answer AND the model closed its thinking and answered (`finish == stop`).
+
+| model | completed correct | hit cap | verbatim loops | mean tokens | mean tokens, completed correct | completed-correct idx |
+|---|---|---|---|---|---|---|
+| Qwen3.5-0.8B (unedited) | 3/12 | 9/12 | 5/12 | 5738 | 4952 | 480, 1020, 1101 |
+| v1 (alpha 6) | 2/12 | 10/12 | 2/12 | 5141 | 844 | 1020, 1101 |
+| Astra's published edit | 1/12 | 11/12 | 1/12 | 5903 | 4838 | 1257 |
+| **v2 (alpha 8)** | **3/12** | 9/12 | 4/12 | 5291 | 3163 | 480, 799, 1101 |
+
+Full table incl. the stopped runs: `results/table_v2.md`.
+
+Other strengths tried on the same 12 (runs stopped once they could no longer reach 3):
+
+- alpha 3: 1 completed correct in the first 8 (`results/a3_partial8_gsm8k.jsonl`), lost both 480 and 1020 to the cap.
+- alpha 10: 1 completed correct in the first 8 (`results/a10_partial8_gsm8k.jsonl`), also lost 480 and 1020.
+- layer 19 only, alpha 6: 2 completed correct in 12 (1101 in 4,515 tokens, 1020 in 1,125), 10/12 hit the cap. The machine reset before rows 1-10 were saved, so only the last two rows are in `results/l19a6_last2_gsm8k.jsonl`; the rest are from the run log.
+
+### Honest reading of v2
+
+- v2 ties base on completed answers (3/12) where v1 dropped to 2/12. It gets back 480 (which v1 lost), solves 799 (which base, v1 and Astra all missed, in 761 tokens), but loses 1020.
+- Correct answers are shorter than base (mean 3,163 vs 4,952 tokens) and verbatim loops drop a little (4/12 vs 5/12). v1 loops less (2/12) and its two correct answers are much shorter, so v2 trades some of v1's brevity for not losing correct answers.
+- alpha was picked on these same 12 problems, so this is selection on the test set, not held-out evidence. With n = 12 every row is +-1 problem of noise. A bigger, untouched set is needed before calling v2 better than base.
+- Stronger is not simply shorter: alpha 3 and alpha 10 both did worse than alpha 8, and per-problem length moves a lot between runs.
+
 ## Run it on a laptop
 
-See `scripts/run_on_laptop.md`. The Q8_0 GGUF (one file, ~795 MB) is attached to Release v0.1 (https://github.com/jazzpher/qwen35-ramble-edit/releases/tag/v0.1) and runs on CPU with 8 GB RAM (tested on a 2-CPU / 4 GB box at ~37 tok/s).
+See `scripts/run_on_laptop.md`.
+
+- v1: one Q8_0 GGUF (~795 MB) on Release v0.1 (https://github.com/jazzpher/qwen35-ramble-edit/releases/tag/v0.1).
+- v2: the same size, split in 3 parts on Release v0.2 (https://github.com/jazzpher/qwen35-ramble-edit/releases/tag/v0.2). Download all three into one folder and point llama.cpp at the first, it loads the rest by itself:
+
+```
+llama-server -m qwen35-0.8b-v2-alpha8-q8_0-00001-of-00003.gguf -c 8192 --jinja
+```
+
+Both run on CPU with 8 GB RAM (tested on a 2-CPU / 4 GB box).
 
 ## Reproduce
 
@@ -54,4 +91,6 @@ python scripts/eval_gsm8k.py <label> <max_tokens> <port> <n>   # against a llama
 python scripts/analyze.py results/<label>_gsm8k.jsonl
 python scripts/find_direction.py results/probe_base_gsm8k.jsonl --alpha 6 --k 64 --layers 15,19 --contrast both --out ./edited
 python scripts/make_table.py
+python scripts/make_variant.py <base_hf_dir> ./v2 --alpha 8 --layers 15,19 --k 64   # v2
+python scripts/compare_v2.py base=results/base_gsm8k.jsonl v2=results/a8_gsm8k.jsonl
 ```
