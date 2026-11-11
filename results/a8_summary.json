@@ -1,0 +1,9 @@
+{
+ "label": "a8",
+ "n": 12,
+ "max_tokens": 6000,
+ "accuracy": 0.25,
+ "ramble_rate": 0.75,
+ "mean_tokens": 5290.666666666667,
+ "minutes": 30.2
+}
