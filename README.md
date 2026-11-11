@@ -45,7 +45,7 @@ Same 12 GSM8K test problems, Qwen chat template with thinking on, temperature 0.
 
 ## Run it on a laptop
 
-See `scripts/run_on_laptop.md`. The Q8_0 GGUF (~830 MB, split in 2 parts) is attached to this repo's Release and runs on CPU with 8 GB RAM (tested on a 2-CPU / 4 GB box at ~37 tok/s).
+See `scripts/run_on_laptop.md`. The Q8_0 GGUF (one file, ~795 MB) is attached to Release v0.1 (https://github.com/jazzpher/qwen35-ramble-edit/releases/tag/v0.1) and runs on CPU with 8 GB RAM (tested on a 2-CPU / 4 GB box at ~37 tok/s).
 
 ## Reproduce
 
